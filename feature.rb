@@ -16,6 +16,9 @@ class Feature
       22
     when "stone"
       7
+    when "flower"
+      15
+      #42
     else
       @type = "tree"
       23
@@ -30,9 +33,24 @@ class Feature
       0xff_634A1B
     when "stone"
       0xff_9DA1B0
+    when "flower"
+      0xff_ffaa00
     else
       @type = "tree"
       0xff_15590C
+    end
+  end
+
+  def navigable?
+    case type
+    when "tree"
+      false
+    when "stump"
+      false
+    when "stone"
+      true
+    when "flower"
+      true
     end
   end
 end

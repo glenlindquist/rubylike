@@ -13,7 +13,10 @@ class Tile
   end
 
   def navigable?
-    return false if $window.map.features.include?(@coordinates)
+    
+    if $window.map.features.include?(@coordinates)
+      return false if !$window.map.features[@coordinates].navigable?
+    end
     case @terrain
     when "tree"
       false

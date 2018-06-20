@@ -72,11 +72,13 @@ class Coordinates
         closest = test_coordinates
       end
     end
-    return closest
+    return closest.dup
+    # Hmm... some odd consequences if I don't dup the returned coordinates--Why wouldn't you be able to share coordinate instances between objects??
   end
 
   def Coordinates.distance(c1, c2)
-    Math::sqrt((c2.x - c1.x)**2 + (c2.y - c1.y)**2)
+    #Math::sqrt((c2.x - c1.x)**2 + (c2.y - c1.y)**2)
+    (c2.x - c1.x)**2 + (c2.y - c1.y)**2
   end
 
 end
