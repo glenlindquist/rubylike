@@ -26,7 +26,7 @@ class MainWindow < Gosu::Window
   FONT = "Courier"
   FONT_SIZE = TILE_SIZE = 16
   INPUT_DELAY = 150 #milliseconds
-
+  
   # Full window
   WIDTH = 960
   HEIGHT = 720
@@ -63,7 +63,7 @@ class MainWindow < Gosu::Window
     @gui = {}
     @last_input_at = -1 - INPUT_DELAY
     @last_update_at = 0
-    @player_sprite = @sprites[1]
+    @player_sprite = @sprites[1] #Gosu::Image.new('assets/sprites/player.png') 
     @map = Map.new
     @player = Player.new(@map.find_solid_ground(Coordinates.new(0,0)))
     @camera = Camera.new(10,5)
@@ -511,4 +511,5 @@ class Camera
   end
 end
 
+Gosu::enable_undocumented_retrofication
 MainWindow.new.show
