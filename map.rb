@@ -17,6 +17,8 @@ class Map
   STUMP_CHANCE = 0.0005
   STONE_CHANCE = 0.02
   FLOWER_CHANCE = 0.02
+  STICK_CHANCE = 0.005
+  SHELL_CHANCE = 0.001
 
   #Minimap
   MINIMAP_DESIRED_WIDTH = 18.0  # MUST BE DECIMAL
@@ -182,6 +184,14 @@ class Map
         end
         if FLOWER_CHANCE > rand
           @features[coordinates] = Feature.new(coordinates, "flower")
+        end
+        if STICK_CHANCE > rand
+          @features[coordinates] = Feature.new(coordinates, "stick")
+        end
+      end
+      if value == 2 # Sand
+        if SHELL_CHANCE > rand
+          @features[coordinates] = Feature.new(coordinates, "shell")
         end
       end
     end

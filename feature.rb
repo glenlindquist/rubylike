@@ -5,7 +5,7 @@ class Feature
     @coordinates = coordinates
     @type = type
     @sprite_index = set_sprite
-    @fg_color = set_fg_color
+    @fg_color = Feature.get_fg_color(@type)
   end
 
   def set_sprite
@@ -18,7 +18,10 @@ class Feature
       7
     when "flower"
       15
-      #42
+    when "stick"
+      rand < 0.5 ? 47 : 92
+    when "shell"
+      43
     else
       @type = "tree"
       23
@@ -35,6 +38,10 @@ class Feature
       0xff_9DA1B0
     when "flower"
       0xff_ffaa00
+    when "stick"
+      0xff_634A1B
+    when "shell"
+      0xff_A3F7FF
     else
       @type = "tree"
       0xff_15590C
@@ -51,6 +58,50 @@ class Feature
       true
     when "flower"
       true
+    when "stick"
+      true
+    when "shell"
+      true
+    else
+      true
+    end
+  end
+
+  def self.get_sprite(feature_type)
+    case feature_type
+    when "tree"
+      23
+    when "stump"
+      22
+    when "stone"
+      7
+    when "flower"
+      15
+    when "stick"
+      47
+    when "shell"
+      43
+    else
+      23
+    end
+  end
+
+  def self.get_fg_color(feature_type)
+    case feature_type
+    when "tree"
+      0xff_15590C
+    when "stump"
+      0xff_634A1B
+    when "stone"
+      0xff_9DA1B0
+    when "flower"
+      0xff_ffaa00
+    when "stick"
+      0xff_634A1B
+    when "shell"
+      0xff_A3F7FF
+    else
+      0xff_15590C
     end
   end
 end

@@ -66,6 +66,7 @@ class Coordinates
     closest = nil
     coordinate_array.each do |test_coordinates|
       distance = Coordinates.distance(self, test_coordinates)
+      # Using Euclidian distance here makes targeting feel more natural
       closest_distance ||= distance
       if distance <= closest_distance
         closest_distance = distance
@@ -76,9 +77,18 @@ class Coordinates
     # Hmm... some odd consequences if I don't dup the returned coordinates--Why wouldn't you be able to share coordinate instances between objects??
   end
 
-  def Coordinates.distance(c1, c2)
-    #Math::sqrt((c2.x - c1.x)**2 + (c2.y - c1.y)**2)
+  def Coordinates.tile_distance(c1, c2)
+    x_diff = (c2.x - c1.x).abs
+    y_diff = (c2.y - c1.y).abs
+    return x_diff >= y_diff ? x_diff : y_diff
+  end
+
+  def Coordinates.relative_distance(c1, c2)
     (c2.x - c1.x)**2 + (c2.y - c1.y)**2
+  end
+
+  def Coordinates.distance(c1, c2)
+    Math::sqrt((c2.x - c1.x)**2 + (c2.y - c1.y)**2)
   end
 
 end
