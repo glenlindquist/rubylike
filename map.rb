@@ -15,8 +15,8 @@ class Map
   # Feature-generation constants
   TREE_CHANCE = 0.10
   STUMP_CHANCE = 0.0005
-  STONE_CHANCE = 0.02
-  FLOWER_CHANCE = 0.02
+  STONE_CHANCE = 0.005
+  FLOWER_CHANCE = 0.004
   STICK_CHANCE = 0.005
   SHELL_CHANCE = 0.001
 
@@ -177,7 +177,7 @@ class Map
           @features[coordinates] = Feature.new(coordinates, "tree")
         end
         if STUMP_CHANCE > rand
-          @features[coordinates] = Feature.new(coordinates, "stump")
+          @features[coordinates] = Feature.new(coordinates, "log")
         end
         if STONE_CHANCE > rand
           @features[coordinates] = Feature.new(coordinates, "stone")

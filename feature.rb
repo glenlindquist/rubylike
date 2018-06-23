@@ -1,18 +1,20 @@
 class Feature
-  attr_reader :coordinates
-  attr_accessor :type, :sprite_index, :fg_color
+  attr_reader :coordinates, :full_condition
+  attr_accessor :type, :sprite_index, :fg_color, :current_condition
   def initialize(coordinates, type)
     @coordinates = coordinates
     @type = type
     @sprite_index = set_sprite
     @fg_color = Feature.get_fg_color(@type)
+    @full_condition = 100.0
+    @current_condition = 100.0
   end
 
   def set_sprite
     case type
     when "tree"
       23
-    when "stump"
+    when "log"
       22
     when "stone"
       7
@@ -32,7 +34,7 @@ class Feature
     case type
     when "tree"
       0xff_15590C
-    when "stump"
+    when "log"
       0xff_634A1B
     when "stone"
       0xff_9DA1B0
@@ -52,8 +54,8 @@ class Feature
     case type
     when "tree"
       false
-    when "stump"
-      false
+    when "log"
+      true
     when "stone"
       true
     when "flower"
@@ -71,7 +73,7 @@ class Feature
     case feature_type
     when "tree"
       23
-    when "stump"
+    when "log"
       22
     when "stone"
       7
@@ -90,7 +92,7 @@ class Feature
     case feature_type
     when "tree"
       0xff_15590C
-    when "stump"
+    when "log"
       0xff_634A1B
     when "stone"
       0xff_9DA1B0

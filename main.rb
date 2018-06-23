@@ -21,7 +21,7 @@ end
 # end
 
 class MainWindow < Gosu::Window
-  attr_reader :main_font, :sprites, :screen, :gui, :player, :map, :camera
+  attr_reader :main_font, :sprites, :screen, :gui, :player, :map, :camera, :meters, :player_sprite, :player_avatar_sprite, :avatar, :timer
 
   FONT = "Courier"
   FONT_SIZE = TILE_SIZE = 16
@@ -56,19 +56,23 @@ class MainWindow < Gosu::Window
     self.caption = "Rubylike"
     @main_font = Gosu::Font.new(FONT_SIZE, name: FONT)
     @sprites = Gosu::Image.load_tiles('assets/sprites/main.png', 16, 16)
+    @health_sprites = Gosu::Image.load_tiles('assets/sprites/health.png', 16, 16)
     @solid_tile_sprite = Gosu::Image.new('assets/sprites/tile.png')
     @selector = Gosu::Image.new('assets/sprites/selector_a.png')
     @cursor = Gosu::Image.new('assets/sprites/cursor.png')
     @screen = {}
-    @gui = {}
+    @meters = {}
     @last_input_at = -1 - INPUT_DELAY
     @last_update_at = 0
-    @player_sprite = @sprites[1] #Gosu::Image.new('assets/sprites/player.png') 
+    @player_sprite = Gosu::Image.new('assets/sprites/player_simple.png')
+    @player_avatar_sprite = Gosu::Image.new('assets/sprites/player_avatar.png')
+    @avatar = {}
     @map = Map.new
     @player = Player.new(@map.find_solid_ground(Coordinates.new(0,0)))
     @camera = Camera.new(10,5)
     @timer = 0.0
     init_screen(@sprites[250])
+    init_avatar
   end
 
   def needs_cursor?
@@ -81,6 +85,7 @@ class MainWindow < Gosu::Window
     if @last_update_at - @last_input_at > INPUT_DELAY
       handle_input
     end
+    @player.update
     update_camera
     update_screen
   end
@@ -193,14 +198,56 @@ class MainWindow < Gosu::Window
     end
   end
 
-  # -- GUI -- #
-  def draw_gui
+  # ------ GUI ------ #
+  # ----------------- #
 
+  def init_avatar
+    avatar = Magick::Image.from_blob(@player_avatar_sprite.to_blob){
+      self.format = "RGBA"
+      self.size = "#{$window.player_avatar_sprite.width}x#{$window.player_avatar_sprite.height}"
+      self.depth = 8
+    }.first
+    pixel_array = avatar.get_pixels(0, 0 , $window.player_avatar_sprite.width, $window.player_avatar_sprite.height)
+    pp pixel_array[18].to_color
+    pixel_array.each_with_index do |pixel, index|
+      x = index % $window.player_avatar_sprite.width
+      y = (index / $window.player_avatar_sprite.height)
+      key = nil
+      case pixel.to_color
+      when "black"
+        key = "black"
+      when "white"
+        key = "white"
+      when "#BBBBBBBBBBBB"
+        key = "beard"
+      when "red"
+        key = "empty"
+      else
+        key = "beard"
+      end
+      @avatar[Coordinates.new(x,y)] = key
+    end
+  end
+
+  def draw_gui
     # Target
     if @player.target
       target_on_screen = map_coordinates_to_screen_coordinates(@player.target)
       @selector.draw(target_on_screen.x * 1.tile, target_on_screen.y * 1.tile, 99, 1, 1, 0xff_ff0000)
     end
+
+    #On-screen condition/health meters
+    @meters.each do |coordinates, condition|
+      screen_coordinates = map_coordinates_to_screen_coordinates(coordinates)
+      #14 sprites in health meter
+      health_index = 13 - (condition * 14.0).floor
+      @health_sprites[health_index].draw(
+        screen_coordinates.x * 1.tile,
+        screen_coordinates.y * 1.tile + 1.tile/4,
+        99
+      )
+    end
+
     # Sidebar
     draw_frame(SIDEBAR_X_START, 0, SIDEBAR_WIDTH / TILE_SIZE, SIDEBAR_HEIGHT / TILE_SIZE, 0)
 
@@ -299,8 +346,60 @@ class MainWindow < Gosu::Window
       end
     end
 
+    # Beard indicator
+    SpriteText.new("Beard:").draw(
+      (SIDEBAR_X_START + 12.tiles),
+      inventory_y_start,
+      99
+    )
+    @avatar.each do |coordinates, type|
+      case type
+      when "black"
+        sprite_index = 32
+        sprite_color = 0xff_000000
+        bg_color = 0xff_000000
+      when "white"
+        sprite_index = 32
+        sprite_color = 0xff_e2a146
+        bg_color = 0xff_FDB959
+      when "empty"
+        sprite_index = 32
+        sprite_color = 0xff_000000
+        bg_color = 0xff_000000
+      when "beard"
+        sprite_color = 0xff_634A1B
+        bg_color = 0xff_FDB959
+        sprite_index = 32 
+        sprite_index = 176 if @player.beard_level > 10
+        sprite_index = 177 if @player.beard_level > 25
+        sprite_index = 178 if @player.beard_level > 50
+        bg_color = 0xff_634A1B if @player.beard_level > 75
+      else
+      end
+      #background
+      @solid_tile_sprite.draw(
+        (SIDEBAR_X_START + 10.tiles) + coordinates.x * 1.tile,
+        inventory_y_start + 2.tiles + coordinates.y * 1.tile,
+        99,
+        1,
+        1,
+        bg_color
+      )
+      #sprite
+      @sprites[sprite_index].draw(
+        (SIDEBAR_X_START + 10.tiles) + coordinates.x * 1.tile,
+        inventory_y_start + 2.tiles + coordinates.y * 1.tile,
+        99,
+        1,
+        1,
+        sprite_color
+      )
+    end
+
     # Toolbar
     draw_frame(0, TOOLBAR_Y_START, (TOOLBAR_WIDTH / TILE_SIZE), TOOLBAR_HEIGHT / TILE_SIZE, 0)
+
+    
   end
 
   def draw_frame(x, y, tiles_wide, tiles_high, sprite_index)
@@ -393,17 +492,17 @@ class MainWindow < Gosu::Window
       @timer += @player.movement_cost
     end
     if Gosu.button_down? Gosu::KB_Q
-      player_screen = map_coordinates_to_screen_coordinates(@player.coordinates)
-      player_map = screen_coordinates_to_map_coordinates(player_screen)
-      pp "player: #{@player.coordinates.x} #{@player.coordinates.y}"
       pp "FPS: #{Gosu.fps}"
-      tree = @player.find_nearest_feature("tree")
-      #tree.fg_color = 0xff_ff0000
-      @player.target = tree.coordinates.dup
-      pp Coordinates.tile_distance(@player.coordinates, tree.coordinates)
-      @player.move_toward(tree.coordinates)
+      @player.harvest("tree")
       @last_input_at = Gosu.milliseconds
       @timer += @player.movement_cost
+    end
+    if Gosu.button_down? Gosu::KB_S
+      # @player.shave
+      @player.last_shaved_at = @timer
+      @player.beard_level = 0
+      init_avatar
+      @last_input_at = Gosu.milliseconds
     end
     if Gosu.button_down? Gosu::KB_G
       if @map.features[@player.coordinates]
