@@ -21,7 +21,7 @@ end
 # end
 
 class MainWindow < Gosu::Window
-  attr_reader :main_font, :sprites, :screen, :gui, :player, :map, :camera, :meters, :player_sprite, :player_avatar_sprite, :avatar, :timer
+  attr_reader :main_font, :sprites, :screen, :gui, :player, :map, :camera, :meters, :player_sprite, :player_avatar_sprite, :avatar, :avatar_beard, :timer
 
   FONT = "Courier"
   FONT_SIZE = TILE_SIZE = 16
@@ -67,6 +67,7 @@ class MainWindow < Gosu::Window
     @player_sprite = Gosu::Image.new('assets/sprites/player_simple.png')
     @player_avatar_sprite = Gosu::Image.new('assets/sprites/player_avatar.png')
     @avatar = {}
+    @avatar_beard = {}
     @map = Map.new
     @player = Player.new(@map.find_solid_ground(Coordinates.new(0,0)))
     @camera = Camera.new(10,5)
@@ -220,6 +221,7 @@ class MainWindow < Gosu::Window
         key = "white"
       when "#BBBBBBBBBBBB"
         key = "beard"
+        @avatar_beard[Coordinates.new(x,y)] = 0
       when "red"
         key = "empty"
       else
@@ -306,11 +308,11 @@ class MainWindow < Gosu::Window
     
     # Inventory
     inventory_y_start = Map::MINIMAP_DESIRED_WIDTH * 1.tile + 5.tiles
-    SpriteText.new("Inventory:").draw(
-      SIDEBAR_X_START + 1.tiles,
-      inventory_y_start - 1,
-      0
-    )
+    # SpriteText.new("Inventory:").draw(
+    #   SIDEBAR_X_START + 1.tiles,
+    #   inventory_y_start - 1,
+    #   0
+    # )
     @player.inventory.each do |slot, item|
       slot_math = slot == 0 ? 10 : slot
       if slot == @player.selected_inventory_slot
@@ -348,7 +350,7 @@ class MainWindow < Gosu::Window
 
     # Beard indicator
     SpriteText.new("Beard:").draw(
-      (SIDEBAR_X_START + 12.tiles),
+      (SIDEBAR_X_START + 11.tiles),
       inventory_y_start,
       99
     )
@@ -370,10 +372,6 @@ class MainWindow < Gosu::Window
         sprite_color = 0xff_634A1B
         bg_color = 0xff_FDB959
         sprite_index = 32 
-        sprite_index = 176 if @player.beard_level > 10
-        sprite_index = 177 if @player.beard_level > 25
-        sprite_index = 178 if @player.beard_level > 50
-        bg_color = 0xff_634A1B if @player.beard_level > 75
       else
       end
       #background
@@ -385,6 +383,17 @@ class MainWindow < Gosu::Window
         1,
         bg_color
       )
+
+    end
+
+    @avatar_beard.each do |coordinates, beard_growth|
+      sprite_index = 32
+      sprite_index = 176 if beard_growth == 1
+      sprite_index = 177 if beard_growth == 2
+      sprite_index = 178 if beard_growth == 3
+      #bg_color = 0xff_634A1B if @player.beard_level > 75
+      sprite_color = 0xff_634A1B
+
       #sprite
       @sprites[sprite_index].draw(
         (SIDEBAR_X_START + 10.tiles) + coordinates.x * 1.tile,
@@ -395,6 +404,7 @@ class MainWindow < Gosu::Window
         sprite_color
       )
     end
+
 
     # Toolbar
     draw_frame(0, TOOLBAR_Y_START, (TOOLBAR_WIDTH / TILE_SIZE), TOOLBAR_HEIGHT / TILE_SIZE, 0)
@@ -499,8 +509,11 @@ class MainWindow < Gosu::Window
     end
     if Gosu.button_down? Gosu::KB_S
       # @player.shave
+      @avatar = {}
+      @avatar_beard = {}
       @player.last_shaved_at = @timer
       @player.beard_level = 0
+      @player.beard_threshold = 10
       init_avatar
       @last_input_at = Gosu.milliseconds
     end
@@ -518,7 +531,6 @@ class MainWindow < Gosu::Window
       item = @player.inventory[@player.selected_inventory_slot][0]
       if @player.remove_from_inventory(@player.selected_inventory_slot)
         new_coords = @player.coordinates.dup
-        #something weird about hash#include? is not comparing in the way I want. Hence the duplication.
         @map.features[new_coords] = Feature.new(new_coords, item)
       else
         # couldn't drop

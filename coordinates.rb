@@ -11,6 +11,10 @@ class Coordinates
       other.y == @y
   end
 
+  def !=(other)
+    !(self==(other))
+  end
+
   alias eql? ==
 
   def hash

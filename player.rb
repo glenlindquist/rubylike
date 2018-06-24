@@ -1,12 +1,12 @@
 class Player
-  attr_accessor :coordinates, :movement_cost, :selected_inventory_slot, :selector_active, :target, :beard_level, :last_shaved_at
+  attr_accessor :coordinates, :movement_cost, :selected_inventory_slot, :selector_active, :target, :beard_level, :last_shaved_at, :beard_threshold
   attr_reader :inventory
 
-  BEARD_GROWTH_RATE = 0.1
+  BEARD_GROWTH_RATE = 1.0 # 0.1 #
 
   def initialize(coordinates = Coordinates.new(20, 15))
     @coordinates = coordinates
-    @movement_cost = 10
+    @movement_cost = 1
     @inventory = {
       1 => [],
       2 => [],
@@ -24,7 +24,8 @@ class Player
     @harvest_chance = 1
     @harvest_strength = 10
     @beard_level = 0
-    @beard_threshold = 150
+    @beard_threshold = 10
+    @beard_threshold_increase = 10 + (0.1 * @beard_level)
     @last_shaved_at = 0
   end
 
@@ -34,17 +35,35 @@ class Player
   end
 
   def grow_beard
-    #if we are a beard cell with a nil south neighbor we can grow a new cell
+    @beard_threshold += @beard_threshold_increase
     elligible_cells = []
-    $window.avatar.each do |coordinates, type|
-      if type == "beard" && 
-        ($window.avatar[coordinates.s].nil? || $window.avatar[coordinates.s] == "empty" )
+
+    $window.avatar_beard.each do |coordinates, growth|
+      if growth < 3
         elligible_cells << coordinates
       end
     end
-    new_beard_cell = elligible_cells[rand(elligible_cells.length - 1)].s
-    $window.avatar[new_beard_cell] = "beard"
-    @beard_threshold += 50
+
+    if elligible_cells.length > 10
+      new_growth_cell = elligible_cells[rand(elligible_cells.length - 1)]
+      $window.avatar_beard[new_growth_cell] += 1
+    else
+      # To sprout new beard below:
+      #we are a beard cell with a nil south neighbor we can grow a new cell
+      elligible_cells = []
+      $window.avatar_beard.each do |coordinates, growth|
+        if coordinates.s != Coordinates.new(3,5) && # mouth
+          coordinates.s != Coordinates.new(4,5) &&  # mouth
+          ($window.avatar_beard[coordinates.s].nil? ||
+          $window.avatar_beard[coordinates.s] < $window.avatar_beard[coordinates])
+
+          elligible_cells << coordinates
+        end
+      end
+      new_beard_cell = elligible_cells[rand(elligible_cells.length - 1)].s
+      $window.avatar_beard[new_beard_cell] ||= 0
+      $window.avatar_beard[new_beard_cell] += 1
+    end
   end
 
   def screen_coordinates
