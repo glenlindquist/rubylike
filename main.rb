@@ -88,13 +88,12 @@ class MainWindow < Gosu::Window
       handle_input
     end
     @player.update
-    update_camera
+    #update_camera
   end
 
   def draw
     @cursor.draw(self.mouse_x, self.mouse_y, 9999)
     draw_screen
-    draw_overlay
     draw_gui
     draw_debug
 
@@ -118,86 +117,79 @@ class MainWindow < Gosu::Window
         @map.tiles[screen_coordinates_to_map_coordinates(coordinates)] = tile
       end
 
-      # Background
-      @solid_tile_sprite.draw(
-        coordinates.x * TILE_SIZE,
-          coordinates.y * TILE_SIZE,
-          0,
-          1,
-          1,
-          tile.bg_color
-        )
-    
+      player_distance = Coordinates.tile_distance(coordinates, @player.screen_coordinates)
 
-      # Foreground
-      @sprites[tile.sprite_index].draw(
-        coordinates.x * TILE_SIZE,
-        coordinates.y * TILE_SIZE,
-        0,
-        1,
-        1,
-        tile.fg_color
-      )
-      # Draw features
-      # if @map.features.include?(screen_coordinates_to_map_coordinates(coordinates))
-      #   feature = @map.features[screen_coordinates_to_map_coordinates(coordinates)]
-      #   @sprites[feature.sprite_index].draw(
-      #     coordinates.x * TILE_SIZE,
-      #     coordinates.y * TILE_SIZE,
-      #     1,
-      #     1,
-      #     1,
-      #     feature.fg_color
-      #   )
-      # end
+      if player_distance < @player.vision_radius
+        draw_tile(tile, coordinates)
+
+        # Draw features
+        if @map.features.include?(screen_coordinates_to_map_coordinates(coordinates))
+          feature = @map.features[screen_coordinates_to_map_coordinates(coordinates)]
+          @sprites[feature.sprite_index].draw(
+            coordinates.x * TILE_SIZE,
+            coordinates.y * TILE_SIZE,
+            1,
+            1,
+            1,
+            feature.fg_color
+          )
+        end
 
       # Draw player
-      if coordinates = @player.screen_coordinates
-        @player_sprite.draw(
-          coordinates.x * TILE_SIZE,
-          coordinates.y * TILE_SIZE,
-          2,
+        if coordinates = @player.screen_coordinates
+          @player_sprite.draw(
+            coordinates.x * TILE_SIZE,
+            coordinates.y * TILE_SIZE,
+            2,
+            1,
+            1,
+            0xff_FDB959
+          )
+        end
+      elsif tile.known
+        draw_tile(tile, coordinates)
+        # "fog"
+        @solid_tile_sprite.draw(
+          coordinates.x * 1.tile,
+          coordinates.y * 1.tile,
+          10,
           1,
           1,
-          0xff_FDB959
+          Gosu::Color.new(180,0,0,25)
+        )
+      else #unknown, obscured
+        @solid_tile_sprite.draw(
+          coordinates.x * 1.tile,
+          coordinates.y * 1.tile,
+          10,
+          1,
+          1,
+          Gosu::Color.new(255,0,0,25)
         )
       end
     end
   end
 
-  def draw_overlay 
-    @screen.each do |coordinates|
-      player_distance = Coordinates.tile_distance(coordinates, @player.screen_coordinates)
-      if player_distance <= @player.vision_radius
-        feature = @map.features[screen_coordinates_to_map_coordinates(coordinates)]
-        @sprites[feature.sprite_index].draw(
-          coordinates.x * 1.tile,
-          coordinates.y * 1.tile,
-          1,
-          1,
-          1,
-          feature.fg_color
-        ) if feature
-        elsif @map.tile_at(screen_coordinates_to_map_coordinates(coordinates)) && @map.tile_at(screen_coordinates_to_map_coordinates(coordinates)).known
-          @solid_tile_sprite.draw(
-            coordinates.x * 1.tile,
-            coordinates.y * 1.tile,
-            10,
-            1,
-            1,
-            Gosu::Color.new(180,0,0,25)
-          )
-        else
-          @solid_tile_sprite.draw(
-            coordinates.x * 1.tile,
-            coordinates.y * 1.tile,
-            10,
-            1,
-            1,
-            Gosu::Color.new(255,0,0,25)
-          )
-      end
-    end
+  def draw_tile(tile, coordinates)
+    # Background
+    @solid_tile_sprite.draw(
+      coordinates.x * TILE_SIZE,
+        coordinates.y * TILE_SIZE,
+        0,
+        1,
+        1,
+        tile.bg_color
+      )
+
+    # Foreground
+    @sprites[tile.sprite_index].draw(
+      coordinates.x * TILE_SIZE,
+      coordinates.y * TILE_SIZE,
+      0,
+      1,
+      1,
+      tile.fg_color
+    )
   end
 
   # ------ GUI ------ #
