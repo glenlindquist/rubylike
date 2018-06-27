@@ -60,7 +60,7 @@ class MainWindow < Gosu::Window
     @solid_tile_sprite = Gosu::Image.new('assets/sprites/tile.png')
     @selector = Gosu::Image.new('assets/sprites/selector_a.png')
     @cursor = Gosu::Image.new('assets/sprites/cursor.png')
-    @screen = {}
+    @screen = []
     @meters = {}
     @last_input_at = -1 - INPUT_DELAY
     @last_update_at = 0
@@ -73,7 +73,7 @@ class MainWindow < Gosu::Window
     @player = Player.new(@map.find_solid_ground(Coordinates.new(0,0)))
     @camera = Camera.new(15,15)
     @timer = 0.0
-    init_screen(@sprites[250])
+    init_screen
     init_avatar
   end
 
@@ -89,7 +89,6 @@ class MainWindow < Gosu::Window
     end
     @player.update
     update_camera
-    update_screen
   end
 
   def draw
@@ -102,30 +101,22 @@ class MainWindow < Gosu::Window
   end
   # ------------------ #
 
-  def init_screen(sprite = @sprites[250])
+  def init_screen
     (0...TILES_HIGH).each do |y|
       (0...TILES_WIDE).each do |x|
-        @screen[Coordinates.new(x,y)] = sprite
-      end
-    end
-  end
-
-  def update_screen
-    @screen.each do |coordinates, sprite|
-      if @map.tiles[(coordinates + @camera.coordinates)]
-        @screen[coordinates] = @sprites[
-          @map.tiles[(coordinates + @camera.coordinates)].sprite_index
-        ]
-      else
-        @map.tiles[coordinates + @camera.coordinates] = Tile.new(coordinates + @camera.coordinates, "water")
+        @screen << Coordinates.new(x,y)
       end
     end
   end
 
   def draw_screen
-    @screen.each do |coordinates, sprite|
+    @screen.each do |coordinates|
       tile = tile_at_screen_coordinates(coordinates)
-      tile ||= Tile.new(screen_coordinates_to_map_coordinates(coordinates), "water")
+
+      if tile.nil?
+        tile = Tile.new(screen_coordinates_to_map_coordinates(coordinates), "water")
+        @map.tiles[screen_coordinates_to_map_coordinates(coordinates)] = tile
+      end
 
       # Background
       @solid_tile_sprite.draw(
@@ -175,7 +166,7 @@ class MainWindow < Gosu::Window
   end
 
   def draw_overlay 
-    @screen.each do |coordinates, sprite|
+    @screen.each do |coordinates|
       player_distance = Coordinates.tile_distance(coordinates, @player.screen_coordinates)
       if player_distance <= @player.vision_radius
         feature = @map.features[screen_coordinates_to_map_coordinates(coordinates)]
