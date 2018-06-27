@@ -78,8 +78,9 @@ class Coordinates
       end
     end
     return closest.dup
-    # Hmm... some odd consequences if I don't dup the returned coordinates--Why wouldn't you be able to share coordinate instances between objects??
+    # Hmm... some odd consequences if I don't dup the returned coordinates--Why wouldn't you be able to share coordinates instances between objects?? the coordinates aren't being altered.
   end
+
 
   def Coordinates.tile_distance(c1, c2)
     x_diff = (c2.x - c1.x).abs

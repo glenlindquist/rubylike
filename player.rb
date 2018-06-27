@@ -30,6 +30,10 @@ class Player
     @last_shaved_at = 0
 
     @vision_radius = 10
+
+    coordinates_in_vision.each do |coordinates|
+      $window.map.tile_at(coordinates).known = true if $window.map.tile_at(coordinates)
+    end
   end
 
   def update
@@ -113,7 +117,25 @@ class Player
         eligible_neighbors << neighbor
       end
     end
-    @coordinates = other_coordinates.closest_from_array(eligible_neighbors)
+    destination = other_coordinates.closest_from_array(eligible_neighbors)
+    case
+    when destination == coordinates.n
+      move("north")
+    when destination == coordinates.ne
+      move("northeast")
+    when destination == coordinates.e
+      move("east")
+    when destination == coordinates.se
+      move("southeast")
+    when destination == coordinates.s
+      move("south")
+    when destination == coordinates.sw
+      move("southwest")
+    when destination == coordinates.w
+      move("west")
+    when destination == coordinates.nw
+      move("northwest")
+    end
     true
   end
 
@@ -136,8 +158,8 @@ class Player
   
   def coordinates_in_vision
     coordinates = []
-    ((@coordinates.y - @vision_radius)..(@coordinates.y + @vision_radius)).each do |y|
-      ((@coordinates.x - @vision_radius)..(@coordinates.x + @vision_radius)).each do |x|
+    ((@coordinates.y - @vision_radius + 1)...(@coordinates.y + @vision_radius)).each do |y|
+      ((@coordinates.x - @vision_radius + 1)...(@coordinates.x + @vision_radius)).each do |x|
         coordinates << Coordinates.new(x,y)
       end
     end
@@ -174,6 +196,7 @@ class Player
     coordinates_in_vision.each do |coordinates|
       $window.map.tile_at(coordinates).known = true if $window.map.tile_at(coordinates)
     end
+    $window.update_camera
   end
     
 
