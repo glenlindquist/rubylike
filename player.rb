@@ -117,7 +117,25 @@ class Player
         eligible_neighbors << neighbor
       end
     end
-    @coordinates = other_coordinates.closest_from_array(eligible_neighbors)
+    destination = other_coordinates.closest_from_array(eligible_neighbors)
+    case
+    when destination == coordinates.n
+      move("north")
+    when destination == coordinates.ne
+      move("northeast")
+    when destination == coordinates.e
+      move("east")
+    when destination == coordinates.se
+      move("southeast")
+    when destination == coordinates.s
+      move("south")
+    when destination == coordinates.sw
+      move("southwest")
+    when destination == coordinates.w
+      move("west")
+    when destination == coordinates.nw
+      move("northwest")
+    end
     true
   end
 
