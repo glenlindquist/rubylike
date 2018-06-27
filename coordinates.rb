@@ -132,33 +132,11 @@ class Coordinates
     coordinates_in_line
   end
 
-  def Coordinates.cast_shadow(c1, c2, max_length = 10)
-    coordinates_in_shadow = []
-    x1, y1 = c1.x, c1.y
-    x2, y2 = c2.x, c2.y
-
-    steep = (y2 - y1).abs > (x2 - x1).abs
-    if steep
-      x1, y1 = y1, x1
-      x2, y2 = y2, x2
+  def cast_shadows()
+    origin = self
+    ((origin.y - $window.player.vision_radius)..origin.y).each do |y|
+      #
     end
-
-    if x1 > x2
-      x1, x2 = x2, x1
-      y1, y2 = y2, y1
-    end
-
-    left_corner_x = x2 - 0.5
-    left_corner_y = y2 - 0.5
-
-    right_corner_x = x2 + 0.5
-    right_corner_y = y2 + 0.5
-
-    left_corner_slope = (left_corner_y - y1).abs / (left_corner_x - x1).abs
-    right_corner_slope = (right_corner_y - y1).abs / (right_corner_x - x1).abs
-
-    
-
   end
 
 end
