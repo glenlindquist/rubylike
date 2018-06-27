@@ -68,9 +68,10 @@ class MainWindow < Gosu::Window
     @player_avatar_sprite = Gosu::Image.new('assets/sprites/player_avatar.png')
     @avatar = {}
     @avatar_beard = {}
+    @tile_line = []
     @map = Map.new
     @player = Player.new(@map.find_solid_ground(Coordinates.new(0,0)))
-    @camera = Camera.new(10,5)
+    @camera = Camera.new(15,15)
     @timer = 0.0
     init_screen(@sprites[250])
     init_avatar
@@ -94,8 +95,9 @@ class MainWindow < Gosu::Window
   def draw
     @cursor.draw(self.mouse_x, self.mouse_y, 9999)
     draw_screen
-    # draw_overlay
+    draw_overlay
     draw_gui
+    draw_debug
 
   end
   # ------------------ #
@@ -115,7 +117,7 @@ class MainWindow < Gosu::Window
           @map.tiles[(coordinates + @camera.coordinates)].sprite_index
         ]
       else
-        @screen[coordinates] = @sprites[0] #off the edge of map
+        @map.tiles[coordinates + @camera.coordinates] = Tile.new(coordinates + @camera.coordinates, "water")
       end
     end
   end
@@ -146,17 +148,17 @@ class MainWindow < Gosu::Window
         tile.fg_color
       )
       # Draw features
-      if @map.features.include?(screen_coordinates_to_map_coordinates(coordinates))
-        feature = @map.features[screen_coordinates_to_map_coordinates(coordinates)]
-        @sprites[feature.sprite_index].draw(
-          coordinates.x * TILE_SIZE,
-          coordinates.y * TILE_SIZE,
-          1,
-          1,
-          1,
-          feature.fg_color
-        )
-      end
+      # if @map.features.include?(screen_coordinates_to_map_coordinates(coordinates))
+      #   feature = @map.features[screen_coordinates_to_map_coordinates(coordinates)]
+      #   @sprites[feature.sprite_index].draw(
+      #     coordinates.x * TILE_SIZE,
+      #     coordinates.y * TILE_SIZE,
+      #     1,
+      #     1,
+      #     1,
+      #     feature.fg_color
+      #   )
+      # end
 
       # Draw player
       if coordinates = @player.screen_coordinates
@@ -174,27 +176,35 @@ class MainWindow < Gosu::Window
 
   def draw_overlay 
     @screen.each do |coordinates, sprite|
-      player_distance = Coordinates.distance(coordinates, @player.screen_coordinates)
-      case
-      # when features[screen_coordinates_to_map_coordinates(coordinates)]
-      when player_distance <= 20
-        @solid_tile_sprite.draw(
+      player_distance = Coordinates.tile_distance(coordinates, @player.screen_coordinates)
+      if player_distance <= @player.vision_radius
+        feature = @map.features[screen_coordinates_to_map_coordinates(coordinates)]
+        @sprites[feature.sprite_index].draw(
           coordinates.x * 1.tile,
           coordinates.y * 1.tile,
-          10,
           1,
           1,
-          Gosu::Color.new(player_distance * (230 / 20),0,0,25)
-        )
-      else
-        @solid_tile_sprite.draw(
-          coordinates.x * 1.tile,
-          coordinates.y * 1.tile,
-          10,
           1,
-          1,
-          Gosu::Color.new(230,0,0,25)
-        )
+          feature.fg_color
+        ) if feature
+        elsif @map.tile_at(screen_coordinates_to_map_coordinates(coordinates)) && @map.tile_at(screen_coordinates_to_map_coordinates(coordinates)).known
+          @solid_tile_sprite.draw(
+            coordinates.x * 1.tile,
+            coordinates.y * 1.tile,
+            10,
+            1,
+            1,
+            Gosu::Color.new(180,0,0,25)
+          )
+        else
+          @solid_tile_sprite.draw(
+            coordinates.x * 1.tile,
+            coordinates.y * 1.tile,
+            10,
+            1,
+            1,
+            Gosu::Color.new(255,0,0,25)
+          )
       end
     end
   end
@@ -407,9 +417,7 @@ class MainWindow < Gosu::Window
 
 
     # Toolbar
-    draw_frame(0, TOOLBAR_Y_START, (TOOLBAR_WIDTH / TILE_SIZE), TOOLBAR_HEIGHT / TILE_SIZE, 0)
-
-    
+    draw_frame(0, TOOLBAR_Y_START, (TOOLBAR_WIDTH / TILE_SIZE), TOOLBAR_HEIGHT / TILE_SIZE, 0) 
   end
 
   def draw_frame(x, y, tiles_wide, tiles_high, sprite_index)
@@ -445,6 +453,42 @@ class MainWindow < Gosu::Window
     end
   end
 
+  def draw_debug
+    @tile_line.each do |coordinates|
+      screen_coordinates = map_coordinates_to_screen_coordinates(coordinates)
+      @sprites[0].draw(
+        screen_coordinates.x * 1.tile,
+        screen_coordinates.y * 1.tile,
+        9999,
+        1,
+        1,
+        0x99_ff0000
+      )
+    end
+    coordinates = map_coordinates_to_screen_coordinates(@player.find_nearest_feature("tree").coordinates)
+    player_screen = map_coordinates_to_screen_coordinates(
+      @player.coordinates
+    )
+    Gosu::draw_line(
+      player_screen.x * 1.tile,
+      player_screen.y * 1.tile,
+      0x99_ff0000,
+      (coordinates.x * 1.tile) - (0.5 * TILE_SIZE),
+      (coordinates.y * 1.tile) - (0.5 * TILE_SIZE),
+      0x99_ff0000,
+      9999
+    )
+    Gosu::draw_line(
+      player_screen.x * 1.tile,
+      player_screen.y * 1.tile,
+      0x99_ff0000,
+      (coordinates.x * 1.tile) + (0.5 * TILE_SIZE),
+      (coordinates.y * 1.tile) + (0.5 * TILE_SIZE),
+      0x99_ff0000,
+      9999
+    )
+  end
+
   def update_camera
     if @player.coordinates.x - @camera.coordinates.x <= @camera.buffer_x
       @camera.coordinates.x -= 1
@@ -462,47 +506,52 @@ class MainWindow < Gosu::Window
 
   def handle_input
     if Gosu.button_down? Gosu::KB_LEFT
-      @player.coordinates.x -= 1 if @map.tile_at(Coordinates.new(@player.coordinates.x - 1, @player.coordinates.y)).navigable?
+      @player.move("west")
       @last_input_at = Gosu.milliseconds
       @timer += @player.movement_cost
     end
     if Gosu.button_down? Gosu::KB_RIGHT
-      @player.coordinates.x += 1 if @map.tile_at(Coordinates.new(@player.coordinates.x + 1, @player.coordinates.y)).navigable?
+      @player.move("east")
       @last_input_at = Gosu.milliseconds
       @timer += @player.movement_cost
     end
     if Gosu.button_down? Gosu::KB_UP
-      @player.coordinates.y -=1 if @map.tile_at(Coordinates.new(@player.coordinates.x, @player.coordinates.y - 1)).navigable?
+      @player.move("north")
       @last_input_at = Gosu.milliseconds
       @timer += @player.movement_cost
     end
     if Gosu.button_down? Gosu::KB_DOWN
-      @player.coordinates.y +=1 if @map.tile_at(Coordinates.new(@player.coordinates.x, @player.coordinates.y + 1)).navigable?
+      @player.move("south")
       @last_input_at = Gosu.milliseconds
       @timer += @player.movement_cost
     end
     if Gosu.button_down? Gosu::KB_Y
-      @player.coordinates += Coordinates.new(-1,-1) if @map.tile_at(@player.coordinates + Coordinates.new(-1,-1)).navigable?
+      @player.move("northwest")
       @last_input_at = Gosu.milliseconds
       @timer += @player.movement_cost
-    end
+    end 
     if Gosu.button_down? Gosu::KB_U
-      @player.coordinates += Coordinates.new(1,-1) if @map.tile_at(@player.coordinates + Coordinates.new(1,-1)).navigable?
+      @player.move("northeast")
       @last_input_at = Gosu.milliseconds
       @timer += @player.movement_cost
     end
     if Gosu.button_down? Gosu::KB_B
-      @player.coordinates += Coordinates.new(-1,1) if @map.tile_at(@player.coordinates + Coordinates.new(-1,1)).navigable?
+      @player.move("southwest")
       @last_input_at = Gosu.milliseconds
       @timer += @player.movement_cost
     end
     if Gosu.button_down? Gosu::KB_N
-      @player.coordinates += Coordinates.new(1,1) if @map.tile_at(@player.coordinates + Coordinates.new(1,1)).navigable?
+      @player.move("southeast")
       @last_input_at = Gosu.milliseconds
       @timer += @player.movement_cost
     end
     if Gosu.button_down? Gosu::KB_Q
+      #Debug stuff
       pp "FPS: #{Gosu.fps}"
+      feature_coords = @player.find_nearest_feature("tree").coordinates
+      @tile_line = Coordinates.bresenhams_line(@player.coordinates, feature_coords)
+
+      #Harvest tree
       @player.harvest("tree")
       @last_input_at = Gosu.milliseconds
       @timer += @player.movement_cost

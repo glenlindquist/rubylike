@@ -95,4 +95,70 @@ class Coordinates
     Math::sqrt((c2.x - c1.x)**2 + (c2.y - c1.y)**2)
   end
 
+  def Coordinates.bresenhams_line(c1, c2)
+    # Returns array of coordinates that form tile-quantized line between two coordinates
+    coordinates_in_line = []
+    x1, y1 = c1.x, c1.y
+    x2, y2 = c2.x, c2.y
+    steep = (y2 - y1).abs > (x2 - x1).abs
+    if steep
+      x1, y1 = y1, x1
+      x2, y2 = y2, x2
+    end
+
+    if x1 > x2
+      x1, x2 = x2, x1
+      y1, y2 = y2, y1
+    end
+
+    dx = x2 - x1
+    dy = (y2 - y1).abs
+    error = dx / 2
+    ystep = y1 < y2 ? 1 : -1
+
+    y = y1
+    x1.upto(x2) do |x|
+      if steep
+        coordinates_in_line << Coordinates.new(y, x)
+      else
+        coordinates_in_line << Coordinates.new(x, y)
+      end
+      error -= dy
+      if error < 0
+        y += ystep
+        error += dx
+      end
+    end
+    coordinates_in_line
+  end
+
+  def Coordinates.cast_shadow(c1, c2, max_length = 10)
+    coordinates_in_shadow = []
+    x1, y1 = c1.x, c1.y
+    x2, y2 = c2.x, c2.y
+
+    steep = (y2 - y1).abs > (x2 - x1).abs
+    if steep
+      x1, y1 = y1, x1
+      x2, y2 = y2, x2
+    end
+
+    if x1 > x2
+      x1, x2 = x2, x1
+      y1, y2 = y2, y1
+    end
+
+    left_corner_x = x2 - 0.5
+    left_corner_y = y2 - 0.5
+
+    right_corner_x = x2 + 0.5
+    right_corner_y = y2 + 0.5
+
+    left_corner_slope = (left_corner_y - y1).abs / (left_corner_x - x1).abs
+    right_corner_slope = (right_corner_y - y1).abs / (right_corner_x - x1).abs
+
+    
+
+  end
+
 end

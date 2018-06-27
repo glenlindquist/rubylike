@@ -1,8 +1,8 @@
 class Player
-  attr_accessor :coordinates, :movement_cost, :selected_inventory_slot, :selector_active, :target, :beard_level, :last_shaved_at, :beard_threshold
+  attr_accessor :coordinates, :movement_cost, :selected_inventory_slot, :selector_active, :target, :beard_level, :last_shaved_at, :beard_threshold, :vision_radius
   attr_reader :inventory
 
-  BEARD_GROWTH_RATE = 1.0 # 0.1 #
+  BEARD_GROWTH_RATE =  0.1 # 1.0 #
 
   def initialize(coordinates = Coordinates.new(20, 15))
     @coordinates = coordinates
@@ -23,10 +23,13 @@ class Player
     @target = nil
     @harvest_chance = 1
     @harvest_strength = 10
+
     @beard_level = 0
     @beard_threshold = 10
     @beard_threshold_increase = 10 + (0.1 * @beard_level)
     @last_shaved_at = 0
+
+    @vision_radius = 10
   end
 
   def update
@@ -130,5 +133,48 @@ class Player
       end
     end
   end
+  
+  def coordinates_in_vision
+    coordinates = []
+    ((@coordinates.y - @vision_radius)..(@coordinates.y + @vision_radius)).each do |y|
+      ((@coordinates.x - @vision_radius)..(@coordinates.x + @vision_radius)).each do |x|
+        coordinates << Coordinates.new(x,y)
+      end
+    end
+    coordinates
+  end
+
+  def move(direction)
+    case direction
+    when "north"
+      new_coordinates = @coordinates + Coordinates.new(0, -1)
+      @coordinates = new_coordinates if $window.map.tile_at(new_coordinates).navigable?
+    when "northeast"
+      new_coordinates = @coordinates + Coordinates.new(1, -1)
+      @coordinates = new_coordinates if $window.map.tile_at(new_coordinates).navigable?
+    when "east"
+      new_coordinates = @coordinates + Coordinates.new(1, 0)
+      @coordinates = new_coordinates if $window.map.tile_at(new_coordinates).navigable?
+    when "southeast"
+      new_coordinates = @coordinates + Coordinates.new(1, 1)
+      @coordinates = new_coordinates if $window.map.tile_at(new_coordinates).navigable?
+    when "south"
+      new_coordinates = @coordinates + Coordinates.new(0, 1)
+      @coordinates = new_coordinates if $window.map.tile_at(new_coordinates).navigable?
+    when "southwest"
+      new_coordinates = @coordinates + Coordinates.new(-1, 1)
+      @coordinates = new_coordinates if $window.map.tile_at(new_coordinates).navigable?
+    when "west"
+      new_coordinates = @coordinates + Coordinates.new(-1, 0)
+      @coordinates = new_coordinates if $window.map.tile_at(new_coordinates).navigable?
+    when "northwest"
+      new_coordinates = @coordinates + Coordinates.new(-1, -1)
+      @coordinates = new_coordinates if $window.map.tile_at(new_coordinates).navigable?
+    end
+    coordinates_in_vision.each do |coordinates|
+      $window.map.tile_at(coordinates).known = true if $window.map.tile_at(coordinates)
+    end
+  end
+    
 
 end

@@ -13,7 +13,7 @@ class Map
   MUTATION_CHANCE = 0.25 #Flip-flop chance after low-res generation
 
   # Feature-generation constants
-  TREE_CHANCE = 0.10
+  TREE_CHANCE = 0.001 # 0.10 #
   STUMP_CHANCE = 0.0005
   STONE_CHANCE = 0.005
   FLOWER_CHANCE = 0.004
