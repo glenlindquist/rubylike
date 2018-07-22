@@ -1,6 +1,6 @@
 class Player
   attr_accessor :coordinates, :movement_cost, :selected_inventory_slot, :selector_active, :target, :beard_level, :last_shaved_at, :beard_threshold, :vision_radius
-  attr_reader :inventory
+  attr_reader :inventory, :shadow_caster
 
   BEARD_GROWTH_RATE =  0.1 # 1.0 #
 
@@ -30,10 +30,10 @@ class Player
     @last_shaved_at = 0
 
     @vision_radius = 10
-
-    coordinates_in_vision.each do |coordinates|
-      $window.map.tile_at(coordinates).known = true if $window.map.tile_at(coordinates)
-    end
+    @shadow_caster = ShadowCaster.new
+    # coordinates_in_vision.each do |coordinates|
+    #   $window.map.tile_at(coordinates).known = true if $window.map.tile_at(coordinates)
+    # end
   end
 
   def update
@@ -193,9 +193,20 @@ class Player
       new_coordinates = @coordinates + Coordinates.new(-1, -1)
       @coordinates = new_coordinates if $window.map.tile_at(new_coordinates).navigable?
     end
-    coordinates_in_vision.each do |coordinates|
-      $window.map.tile_at(coordinates).known = true if $window.map.tile_at(coordinates)
+
+    # coordinates_in_vision.each do |coordinates|
+    #   $window.map.tile_at(coordinates).known = true if $window.map.tile_at(coordinates)
+    # end
+    # Make all screen tiles invisible again, then re-check fov and make correct tiles visible
+
+    $window.screen.each do |coordinates|
+      if $window.map.tile_at(coordinates + $window.camera.coordinates)
+        $window.map.tile_at(coordinates + $window.camera.coordinates).visible = false
+      end
     end
+
+    #make tiles visible
+    @shadow_caster.compute_fov_with_shadows(coordinates.x, coordinates.y, @vision_radius)
     $window.update_camera
   end
     

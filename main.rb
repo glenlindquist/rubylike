@@ -6,6 +6,7 @@ require_relative 'tile'
 require_relative 'map'
 require_relative 'feature'
 require_relative 'sprite_text'
+require_relative 'shadow_caster'
 
 class Integer
   def tiles
@@ -72,6 +73,11 @@ class MainWindow < Gosu::Window
     @map = Map.new
     @player = Player.new(@map.find_solid_ground(Coordinates.new(0,0)))
     @camera = Camera.new(15,15)
+    @player.shadow_caster.compute_fov_with_shadows(
+      @player.coordinates.x,
+      @player.coordinates.y,
+      @player.vision_radius
+    )
     @timer = 0.0
     init_screen
     init_avatar
@@ -94,7 +100,7 @@ class MainWindow < Gosu::Window
     @cursor.draw(self.mouse_x, self.mouse_y, 9999)
     draw_screen
     draw_gui
-    draw_debug
+    #draw_debug
 
   end
   # ------------------ #
@@ -118,7 +124,7 @@ class MainWindow < Gosu::Window
 
       player_distance = Coordinates.tile_distance(coordinates, @player.screen_coordinates)
 
-      if player_distance < @player.vision_radius
+      if tile.visible #player_distance < @player.vision_radius && tile.visible
         draw_tile(tile, coordinates)
 
         # Draw features

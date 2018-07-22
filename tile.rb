@@ -1,12 +1,13 @@
 class Tile
   attr_reader :coordinates
-  attr_accessor :sprite_index, :map, :terrain, :known
+  attr_accessor :sprite_index, :map, :terrain, :known, :visible
 
   def initialize(coordinates, terrain = "void")
     @coordinates = coordinates
     @terrain = terrain
     @sprite_index = pick_sprite
     @known = false
+    @visible = false
   end
 
   def screen_coordinates
