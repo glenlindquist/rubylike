@@ -88,7 +88,6 @@ class MainWindow < Gosu::Window
       handle_input
     end
     @player.update
-    #update_camera
   end
 
   def draw

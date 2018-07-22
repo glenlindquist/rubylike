@@ -133,11 +133,5 @@ class Coordinates
     coordinates_in_line
   end
 
-  def cast_shadows()
-    origin = self
-    ((origin.y - $window.player.vision_radius)..origin.y).each do |y|
-      #
-    end
-  end
 
 end
