@@ -124,7 +124,7 @@ class MainWindow < Gosu::Window
 
       player_distance = Coordinates.tile_distance(coordinates, @player.screen_coordinates)
 
-      if tile.visible #player_distance < @player.vision_radius && tile.visible
+      if tile.visible
         draw_tile(tile, coordinates)
 
         # Draw features
@@ -157,16 +157,16 @@ class MainWindow < Gosu::Window
         @solid_tile_sprite.draw(
           coordinates.x * 1.tile,
           coordinates.y * 1.tile,
-          10,
+          5,
           1,
           1,
-          Gosu::Color.new(180,0,0,25)
+          Gosu::Color.new(90,0,0,25)
         )
       else #unknown, obscured
         @solid_tile_sprite.draw(
           coordinates.x * 1.tile,
           coordinates.y * 1.tile,
-          10,
+          5,
           1,
           1,
           Gosu::Color.new(255,0,0,25)
@@ -403,39 +403,71 @@ class MainWindow < Gosu::Window
       )
     end
 
-
     # Toolbar
     draw_frame(0, TOOLBAR_Y_START, (TOOLBAR_WIDTH / TILE_SIZE), TOOLBAR_HEIGHT / TILE_SIZE, 0) 
+
+    draw_menu(0, 0, GAME_WIDTH / TILE_SIZE, GAME_HEIGHT / TILE_SIZE)
   end
 
-  def draw_frame(x, y, tiles_wide, tiles_high, sprite_index)
+  def draw_menu(x, y, tiles_wide, tiles_high)
+    draw_frame(x, y, tiles_wide, tiles_high)
+    # (1...tiles_high - 1 ).each do |row|
+    #   (1...tiles_wide - 1 ).each do |column|
+    #     @solid_tile_sprite.draw(
+    #       column * TILE_SIZE,
+    #       row * TILE_SIZE,
+    #       999,
+    #       1,
+    #       1,
+    #       0xff_000000
+    #     )
+    #   end
+    # end
+    Gosu.draw_rect(
+      1.tile,
+      1.tile,
+      tiles_wide * TILE_SIZE - 2.tiles,
+      tiles_high * TILE_SIZE - 2.tiles,
+      0xff_000000,
+      999
+    )
+    # centering text
+    menu_start = (tiles_wide - "Main Menu".length) / 2
+    SpriteText.new("Main Menu").draw(
+      menu_start.tiles,
+      1.tile,
+      1000
+    )
+  end
+
+  def draw_frame(x, y, tiles_wide, tiles_high, sprite_index = 0)
     (0...tiles_high).each do |tile_y|
       (0...tiles_wide).each do |tile_x|
         case
         when tile_y == 0 && tile_x == 0
           #upper left
-          @sprites[201].draw(x + tile_x * TILE_SIZE, y + tile_y * TILE_SIZE, 0)
+          @sprites[201].draw(x + tile_x * TILE_SIZE, y + tile_y * TILE_SIZE, 99)
         when tile_y == 0 && tile_x == tiles_wide - 1
           #upper right
-          @sprites[187].draw(x + tile_x * TILE_SIZE, y + tile_y * TILE_SIZE, 0)
+          @sprites[187].draw(x + tile_x * TILE_SIZE, y + tile_y * TILE_SIZE, 99)
         when tile_y == tiles_high - 1 && tile_x == 0
           #lower left
-          @sprites[200].draw(x + tile_x * TILE_SIZE, y + tile_y * TILE_SIZE, 0)
+          @sprites[200].draw(x + tile_x * TILE_SIZE, y + tile_y * TILE_SIZE, 99)
         when tile_y == tiles_high - 1 && tile_x == tiles_wide -1
           #lower right
-          @sprites[188].draw(x + tile_x * TILE_SIZE, y + tile_y * TILE_SIZE, 0)
+          @sprites[188].draw(x + tile_x * TILE_SIZE, y + tile_y * TILE_SIZE, 99)
         when tile_y == 0
           #upper
-          @sprites[205].draw(x + tile_x * TILE_SIZE, y + tile_y * TILE_SIZE, 0)
+          @sprites[205].draw(x + tile_x * TILE_SIZE, y + tile_y * TILE_SIZE, 99)
         when tile_y == tiles_high - 1
           #lower
-          @sprites[205].draw(x + tile_x * TILE_SIZE, y + tile_y * TILE_SIZE, 0)
+          @sprites[205].draw(x + tile_x * TILE_SIZE, y + tile_y * TILE_SIZE, 99)
         when tile_x == 0
           #left
-          @sprites[186].draw(x + tile_x * TILE_SIZE, y + tile_y * TILE_SIZE, 0)
+          @sprites[186].draw(x + tile_x * TILE_SIZE, y + tile_y * TILE_SIZE, 99)
         when tile_x == tiles_wide - 1
           #right
-          @sprites[186].draw(x + tile_x * TILE_SIZE, y + tile_y * TILE_SIZE, 0)
+          @sprites[186].draw(x + tile_x * TILE_SIZE, y + tile_y * TILE_SIZE, 99)
         end
       end
     end

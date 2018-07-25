@@ -124,7 +124,7 @@ class ShadowCaster
     end
     x = x + $window.player.coordinates.x
     y = $window.player.coordinates.y - y
-    !$window.map.tile_at(Coordinates.new(x,y)).navigable?
+    $window.map.tile_at(Coordinates.new(x,y)).opaque?
   end
 
   def set_as_visible(x, y, octant)

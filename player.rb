@@ -31,9 +31,7 @@ class Player
 
     @vision_radius = 10
     @shadow_caster = ShadowCaster.new
-    # coordinates_in_vision.each do |coordinates|
-    #   $window.map.tile_at(coordinates).known = true if $window.map.tile_at(coordinates)
-    # end
+
   end
 
   def update
@@ -194,18 +192,12 @@ class Player
       @coordinates = new_coordinates if $window.map.tile_at(new_coordinates).navigable?
     end
 
-    # coordinates_in_vision.each do |coordinates|
-    #   $window.map.tile_at(coordinates).known = true if $window.map.tile_at(coordinates)
-    # end
     # Make all screen tiles invisible again, then re-check fov and make correct tiles visible
-
     $window.screen.each do |coordinates|
       if $window.map.tile_at(coordinates + $window.camera.coordinates)
         $window.map.tile_at(coordinates + $window.camera.coordinates).visible = false
       end
     end
-
-    #make tiles visible
     @shadow_caster.compute_fov_with_shadows(coordinates.x, coordinates.y, @vision_radius)
     $window.update_camera
   end

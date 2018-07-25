@@ -15,7 +15,6 @@ class Tile
   end
 
   def navigable?
-    
     if $window.map.features.include?(@coordinates)
       return false if !$window.map.features[@coordinates].navigable?
     end
@@ -29,6 +28,14 @@ class Tile
     else
       true
     end
+  end
+
+  def opaque?
+    if $window.map.features.include?(@coordinates)
+      return true if $window.map.features[@coordinates].type == "tree"
+    end
+    return true if @terrain == "tree"
+    return false
   end
 
   def pick_sprite
