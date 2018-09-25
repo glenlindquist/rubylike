@@ -7,6 +7,7 @@ require_relative 'map'
 require_relative 'feature'
 require_relative 'sprite_text'
 require_relative 'shadow_caster'
+require_relative 'gui'
 
 class Integer
   def tiles
@@ -79,6 +80,7 @@ class MainWindow < Gosu::Window
       @player.vision_radius
     )
     @timer = 0.0
+    @mode = "game"
     init_screen
     init_avatar
   end
@@ -100,6 +102,9 @@ class MainWindow < Gosu::Window
     @cursor.draw(self.mouse_x, self.mouse_y, 9999)
     draw_screen
     draw_gui
+    if @mode == "menu"
+      draw_menu
+    end
     #draw_debug
 
   end
@@ -406,39 +411,14 @@ class MainWindow < Gosu::Window
     # Toolbar
     draw_frame(0, TOOLBAR_Y_START, (TOOLBAR_WIDTH / TILE_SIZE), TOOLBAR_HEIGHT / TILE_SIZE, 0) 
 
-    draw_menu(0, 0, GAME_WIDTH / TILE_SIZE, GAME_HEIGHT / TILE_SIZE)
+    
   end
 
-  def draw_menu(x, y, tiles_wide, tiles_high)
-    draw_frame(x, y, tiles_wide, tiles_high)
-    # (1...tiles_high - 1 ).each do |row|
-    #   (1...tiles_wide - 1 ).each do |column|
-    #     @solid_tile_sprite.draw(
-    #       column * TILE_SIZE,
-    #       row * TILE_SIZE,
-    #       999,
-    #       1,
-    #       1,
-    #       0xff_000000
-    #     )
-    #   end
-    # end
-    Gosu.draw_rect(
-      1.tile,
-      1.tile,
-      tiles_wide * TILE_SIZE - 2.tiles,
-      tiles_high * TILE_SIZE - 2.tiles,
-      0xff_000000,
-      999
-    )
-    # centering text
-    menu_start = (tiles_wide - "Main Menu".length) / 2
-    SpriteText.new("Main Menu").draw(
-      menu_start.tiles,
-      1.tile,
-      1000
-    )
+  def draw_menu
+    menu = GUI::Window.new(20, 20, 99, "Main Menu")
+    menu.draw(0,0)
   end
+  
 
   def draw_frame(x, y, tiles_wide, tiles_high, sprite_index = 0)
     (0...tiles_high).each do |tile_y|
@@ -655,6 +635,14 @@ class MainWindow < Gosu::Window
         @player.target = mouse_on_map.dup
       end
       pp "map: #{mouse_on_map.x}, #{mouse_on_map.y}"
+      @last_input_at = Gosu.milliseconds
+    end
+    if Gosu.button_down? Gosu::KB_M
+      if @mode == "menu"
+        @mode = "play"
+      else
+        @mode = "menu"
+      end
       @last_input_at = Gosu.milliseconds
     end
   end
