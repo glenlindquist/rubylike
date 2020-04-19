@@ -2,7 +2,7 @@
 
 It's a roguelike. It's written in Ruby and utilizes the [Gosu library](https://github.com/gosu/gosu).
 
-![Screenshot](/assets/screenshot.jpg)
+![Screenshot](/assets/screenshot.png)
 
 
 Currently there is not really any gameplay implemented (i.e., no enemies, nothing to do).
