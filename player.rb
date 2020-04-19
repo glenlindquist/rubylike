@@ -2,7 +2,7 @@ class Player
   attr_accessor :coordinates, :movement_cost, :selected_inventory_slot, :selector_active, :target, :beard_level, :last_shaved_at, :beard_threshold, :vision_radius
   attr_reader :inventory, :shadow_caster
 
-  BEARD_GROWTH_RATE =  0.1 # 1.0 #
+  BEARD_GROWTH_RATE =  1.0 # 0.1 # 
 
   def initialize(coordinates = Coordinates.new(20, 15))
     @coordinates = coordinates
